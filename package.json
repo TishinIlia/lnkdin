@@ -1,0 +1,16 @@
+{
+  "name": "scrapedin",
+  "version": "1.0.8",
+  "scripts": {
+    "test": "mocha src/**.test.js",
+    "lint": "standard --fix 'src/*.js'",
+    "coverage": "nyc npm test",
+    "coverage:report": "nyc --reporter=lcov npm test"
+  },
+  "dependencies": {
+    "scrapedin": "^1.0.8"
+  },
+  "engines": {
+    "node": ">= 7.6.0"
+  }
+}
