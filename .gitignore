@@ -97,3 +97,21 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+.DS_Store
+node_modules
+/dist
+
+/tests/e2e/reports/
+selenium-debug.log
+
+# local env files
+.env.local
+.env.*.local
+
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
