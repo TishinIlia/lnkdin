@@ -24,17 +24,20 @@ export default {
   props: {
     active: {
       default: false,
-      type: Boolean,
-      required: true
+      type: Boolean
     },
     title: {
       default: '',
-      type: String,
-      required: true
+      type: String
+    },
+    loading: {
+      default: false,
+      type: Boolean
     }
   },
   methods: {
     close () {
+      if (this.loading) return
       this.$emit('close', false)
     }
   }

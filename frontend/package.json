@@ -13,7 +13,10 @@
     "core-js": "^2.6.5",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
-    "spectre.css": "^0.5.8"
+    "spectre.css": "^0.5.8",
+    "vue-cookies": "^1.5.13",
+    "date-fns": "^2.2.1",
+    "papaparse": "^5.1.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.11.0",

@@ -1,11 +1,6 @@
 <template>
-  <Modal title="Add persons" :active="active" @close="close($event)">
+  <Modal title="Add persons" :active="active" @close="close($event)" :loading="loading">
     <div class="empty">
-      <div class="empty-icon">
-        <i class="icon icon-people icon-4x"></i>
-      </div>
-      <p class="empty-title h5">You have no new messages</p>
-      <p class="empty-subtitle">Click the button to start a conversation.</p>
       <div class="empty-action">
         <button class="btn btn-primary" v-show="!addSingleProfile" @click="openSingleProfile">Add one</button>
         <div class="input-group" v-show="addSingleProfile">
@@ -15,8 +10,8 @@
         </div>
       </div>
       <div class="empty-action">
-        <input type="file" ref="upload" accept=".cvs" class="add-file__input" @input="uploadCVS">
-        <button class="btn btn-primary" @click="openUploadModal">Upload CVS <i class="icon icon-upload"></i></button>
+        <input type="file" ref="upload" name="csvFile" accept=".csv" class="add-file__input" @input="uploadCVS">
+        <button class="btn btn-primary" @click="openUploadModal">Upload CSV <i class="icon icon-upload"></i></button>
       </div>
     </div>
     <template slot="footer">
@@ -27,6 +22,7 @@
 
 <script>
 import Modal from '@/components/Modal'
+import Papa from 'papaparse'
 export default {
   name: 'AddModal',
   components: {
@@ -41,6 +37,7 @@ export default {
   data () {
     return {
       addSingleProfile: false,
+      loading: false,
       singleProfile: ''
     }
   },
@@ -52,19 +49,70 @@ export default {
       this.$refs.upload.click()
     },
     uploadSingle () {
-      if (this.singleProfile.length > 0) {
-        console.log(this.singleProfile)
-        this.$notify({ type: 'toast-success', text: `Profile successfully uploaded` })
-        this.singleProfile = ''
-        this.closeSingleProfile()
+      if (this.singleProfile.length === 0) return
+      this.loading = true
+      const profile = {
+        url: this.singleProfile,
+        date: Date.now()
       }
+      fetch('http://localhost:3012/profiles/', {
+        method: 'POST',
+        body: JSON.stringify(profile),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Upload profile failed')
+          this.$notify({ type: 'toast-success', text: `Profile successfully uploaded` })
+          this.$emit('update')
+        })
+        .catch(err => {
+          this.$notify({ type: 'toast-error', text: err })
+        })
+        .then(() => {
+          this.loading = false
+        })
+      this.singleProfile = ''
+      this.closeSingleProfile()
     },
     uploadCVS (event) {
-      console.log(event.target.files[0])
       const file = event.target.files[0]
-      this.$notify({ type: 'toast-success', text: `${file.name} successfully uploaded` })
-      this.$refs.upload.value = ''
-      this.close(false)
+      Papa.parse(file,
+        {
+          complete: (data) => {
+            console.log(data)
+            const results = data.data.map(item => {
+              console.log(item)
+              return { url: item[0] }
+            })
+            console.log(results)
+            console.log(JSON.stringify(results))
+          },
+          skipEmptyLines: true
+        })
+      // fetch('http://localhost:3012/profiles/csv', {
+      //   method: 'POST',
+      //   body: formData,
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data;boundary=----WebKitFormBoundaryyrV7KO0BoCBuDbTL'
+      //   },
+      //   credentials: 'same-origin'
+      // })
+      //   .then(res => {
+      //     if (!res.ok) throw new Error('Upload CSV file failed')
+      //     this.$notify({ type: 'toast-success', text: `CSV ${file.name} successfully uploaded` })
+      //     this.$refs.upload.value = ''
+      //     this.$emit('update')
+      //     this.close(false)
+      //   })
+      //   .catch(err => {
+      //     this.$notify({ type: 'toast-error', text: err })
+      //   })
+      //   .then(() => {
+      //     this.loading = false
+      //   })
     },
     openSingleProfile () {
       this.addSingleProfile = true

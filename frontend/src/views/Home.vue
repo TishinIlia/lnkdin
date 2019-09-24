@@ -3,23 +3,50 @@
     <header class="header">
       <div class="container grid-xl navbar">
         <section class="navbar-section">
-          <button class="btn btn-link" @click="openAddModal">Add</button>
-          <button class="btn btn-link">2</button>
-          <button class="btn btn-link">3</button>
-        </section>
-        <section class="navbar-section">
-          <div class="input-group input-inline">
-            <input class="form-input" type="text" placeholder="Search contact" title="Search contact">
-            <button class="btn btn-primary input-group-btn">Search</button>
-          </div>
+          <button class="btn btn-primary" @click="openAddModal">Add Profiles</button>
         </section>
       </div>
     </header>
     <main>
-      <section></section>
+      <div class="container grid-xl">
+        <section class="profiles">
+          <div v-if="loading">
+            <div class="loading loading-lg"></div>
+          </div>
+          <div v-else>
+            <div v-if="profiles.length === 0">
+              <div class="empty">
+                <p class="empty-subtitle h3">Let's add profiles</p>
+                <div class="empty-action">
+                  <button class="btn btn-primary" @click="openAddModal">Add</button>
+                </div>
+              </div>
+            </div>
+            <article class="table" v-else>
+              <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                  <th>LinkedIn</th>
+                  <th>Date of update</th>
+                  <th></th>
+                  <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="item in profiles" :key="item._id">
+                  <td>{{item.url}}</td>
+                  <td>{{item.date | date}}</td>
+                  <td><i class="icon icon-refresh text-primary"></i></td>
+                  <td><i class="icon icon-cross text-error" @click="deleteProfile(item._id)"></i></td>
+                </tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+        </section>
+      </div>
     </main>
-    <footer>Footer</footer>
-    <AddModal :active="addModal" @close="closeAddModal($event)"></AddModal>
+    <AddModal :active="addModal" @close="closeAddModal($event)" @update="addModalEmitUpdate"></AddModal>
   </div>
 </template>
 
@@ -32,8 +59,13 @@ export default {
   },
   data () {
     return {
-      addModal: false
+      addModal: false,
+      profiles: [],
+      loading: false
     }
+  },
+  beforeMount () {
+    this.getProfiles()
   },
   methods: {
     openAddModal () {
@@ -41,6 +73,48 @@ export default {
     },
     closeAddModal (event) {
       this.addModal = event
+    },
+    addModalEmitUpdate () {
+      this.getProfiles()
+    },
+    getProfiles () {
+      this.loading = true
+      fetch('http://localhost:3012/profiles/', { credentials: 'same-origin' })
+        .then(res => {
+          if (!res.ok) throw new Error('Loading error')
+          return res.json()
+        })
+        .then(data => {
+          this.profiles = data
+        })
+        .catch(err => {
+          this.$notify({ type: 'toast-error', text: `${err}` })
+        })
+        .then(() => {
+          this.loading = false
+        })
+    },
+    deleteProfile (id) {
+      this.loading = true
+      fetch('http://localhost:3012/profiles/', {
+        method: 'DELETE',
+        body: JSON.stringify({ id: id }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Deleting error')
+          this.$notify({ type: 'toast-success', text: `Profile was deleted successfully` })
+          this.getProfiles()
+        })
+        .catch(err => {
+          this.$notify({ type: 'toast-error', text: `${err}` })
+        })
+        .then(() => {
+          this.loading = false
+        })
     }
   }
 }
@@ -54,5 +128,8 @@ export default {
   .header {
     padding: 1rem 0;
     border-bottom: 1px solid $dark-color;
+  }
+  .profiles {
+    padding: 3rem;
   }
 </style>
