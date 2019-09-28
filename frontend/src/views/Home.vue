@@ -3,7 +3,7 @@
     <header class="header">
       <div class="container grid-xl navbar">
         <section class="navbar-section">
-          <button class="btn btn-primary" @click="openAddModal">Add Profiles</button>
+          <button class="btn btn-primary" @click="openAddModal">Add Profile</button>
         </section>
       </div>
     </header>

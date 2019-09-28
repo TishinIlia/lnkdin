@@ -13,9 +13,10 @@
         <input type="file" ref="upload" name="csvFile" accept=".csv" class="add-file__input" @input="uploadCVS">
         <button class="btn btn-primary" @click="openUploadModal">Upload CSV <i class="icon icon-upload"></i></button>
       </div>
+      <div class="loading loading-lg" v-show="loading"></div>
     </div>
     <template slot="footer">
-      <button @click="close(false)" class="btn btn-primary">Close</button>
+      <button @click="close(false)" class="btn btn-primary" :disabled="loading">Close</button>
     </template>
   </Modal>
 </template>
@@ -52,8 +53,7 @@ export default {
       if (this.singleProfile.length === 0) return
       this.loading = true
       const profile = {
-        url: this.singleProfile,
-        date: Date.now()
+        url: this.singleProfile
       }
       fetch('http://localhost:3012/profiles/', {
         method: 'POST',
@@ -78,41 +78,38 @@ export default {
       this.closeSingleProfile()
     },
     uploadCVS (event) {
+      this.loading = true
       const file = event.target.files[0]
       Papa.parse(file,
         {
           complete: (data) => {
-            console.log(data)
             const results = data.data.map(item => {
-              console.log(item)
               return { url: item[0] }
             })
-            console.log(results)
-            console.log(JSON.stringify(results))
+            fetch('http://localhost:3012/profiles/csv', {
+              method: 'POST',
+              body: JSON.stringify(results),
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'same-origin'
+            })
+              .then(res => {
+                if (!res.ok) throw new Error('Upload CSV file failed')
+                this.$notify({ type: 'toast-success', text: `CSV ${file.name} successfully uploaded` })
+                this.$refs.upload.value = ''
+                this.$emit('update')
+                this.close(false)
+              })
+              .catch(err => {
+                this.$notify({ type: 'toast-error', text: err })
+              })
+              .then(() => {
+                this.loading = false
+              })
           },
           skipEmptyLines: true
         })
-      // fetch('http://localhost:3012/profiles/csv', {
-      //   method: 'POST',
-      //   body: formData,
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data;boundary=----WebKitFormBoundaryyrV7KO0BoCBuDbTL'
-      //   },
-      //   credentials: 'same-origin'
-      // })
-      //   .then(res => {
-      //     if (!res.ok) throw new Error('Upload CSV file failed')
-      //     this.$notify({ type: 'toast-success', text: `CSV ${file.name} successfully uploaded` })
-      //     this.$refs.upload.value = ''
-      //     this.$emit('update')
-      //     this.close(false)
-      //   })
-      //   .catch(err => {
-      //     this.$notify({ type: 'toast-error', text: err })
-      //   })
-      //   .then(() => {
-      //     this.loading = false
-      //   })
     },
     openSingleProfile () {
       this.addSingleProfile = true
