@@ -1,50 +1,54 @@
 var db = require('../db');
 var ObjectID = require('mongodb').ObjectID;
 
-exports.all = function (cb) {
+exports.requestFriends = function (profiles, cb) {
 	var collection = db.get().collection('profiles');
-	collection.find().toArray(function (err, documents) {
-		cb(err, documents)
-	})
-};
-
-exports.findById = function (id, cb) {
-	var collection = db.get().collection('profiles');
-	collection.findOne({ _id: ObjectID(id)}, function (err, document) {
-		cb(err, document)
-	})
-};
-
-exports.create = function (profile, cb) {
-	var collection = db.get().collection('profiles');
-	collection.insertOne(profile, null, function (err, profile) {
-		cb(err, profile)
+	collection.insertMany(profiles, null, function (err, profiles) {
+		if (!err) {
+			collection.find().toArray(function (err, documents) {
+				cb(err, documents)
+			})
+		} else {
+			cb(err, profiles)
+		}
 	});
 };
 
-exports.update = function (id, newData, cb) {
+exports.updateOne = function (id, newData, cb) {
 	var collection = db.get().collection('profiles');
 	collection.updateOne(
 		{ _id: ObjectID(id)},
 		{$set: newData},
-		function (err, document) {
-			cb(err, document)
-		});
-};
-
-exports.delete = function (id, cb) {
-	var collection = db.get().collection('profiles');
-	collection.deleteOne(
-		{ _id: ObjectID(id)},
 		null,
 		function (err, document) {
 			cb(err, document)
 		});
 };
 
-exports.csv = function (profiles, cb) {
+exports.updateAll = function (getFriendDataFunction, cb) {
 	var collection = db.get().collection('profiles');
-	collection.insertMany(profiles, null, function (err, document) {
-		cb(err, document)
-	})
+	collection.insertMany(profiles, null, function (err, profiles) {
+		if (!err) {
+			collection.find().toArray(function (err, documents) {
+				documents.forEach(function (item) {
+					getFriendDataFunction(item.url)
+						.then(function (data) {
+							collection.updateOne({ _id: ObjectID(id)},
+								{$set: {
+										updateDate: Date.now(),
+										profileData: data
+									}
+								},
+								null,
+								function () {
+									console.log(item._id + ' updated')
+								})
+						})
+				}
+			)
+			})
+		} else {
+			cb(err, profiles)
+		}
+	});
 };

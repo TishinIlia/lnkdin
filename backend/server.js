@@ -4,6 +4,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 var profilesController = require('./controllers/profiles');
+var profileController = require('./controllers/profile');
 var db = require('./db');
 var app = express();
 
@@ -18,17 +19,17 @@ app.get('/', function (req, res) {
 	res.send('Hello world');
 });
 
-app.get('/profiles', profilesController.all);
+app.get('/profiles', profilesController.requestFriends);
 
-app.get('/profiles/:id', profilesController.findById);
+app.put('/profiles', profilesController.updateOne);
 
-app.post('/profiles', profilesController.create);
+app.put('/profiles/all', profilesController.updateAll);
 
-app.post('/profiles/csv', profilesController.csv);
+app.get('/profile', profileController.get);
 
-app.put('/profiles/:id', profilesController.update);
+app.post('/profile', profileController.create);
 
-app.delete('/profiles', profilesController.delete);
+app.put('/profile', profileController.update);
 
 db.connect('mongodb://localhost:27017',function (err) {
 	if (err) return console.log(err);

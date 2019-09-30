@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer')
 const login = require('./login')
 const logger = require('./logger')
 const profiles = require('./profiles')
-const profile = require('./profile')
 
 module.exports = async({ email, password, isHeadless, hasToLog, puppeteerArgs } = { isHeadless: true, hasToLog: false }) => {
     if (!hasToLog) {
